@@ -1,0 +1,91 @@
+{
+	"AWSTemplateFormatVersion": "2010-09-09",
+	"Resources": {
+		"InternetGateway": {
+			"Type": "AWS::EC2::InternetGateway",
+			"Properties": {}
+		},
+		"VPCGatewayAttachment": {
+			"Type": "AWS::EC2::VPCGatewayAttachment",
+			"Properties": {
+				"InternetGatewayId": {
+					"Ref": "InternetGateway"
+				},
+				"VpcId": {
+					"Ref": "gkVPC"
+				}
+			}
+		},
+		"gkVPC": {
+			"Type": "AWS::EC2::VPC",
+			"Properties": {
+				"CidrBlock": "10.0.1.0/24",
+				"Tags": [{
+					"Key": "foo",
+					"Value": "bar"
+				}]
+			}
+		},
+		"PublicSubnet": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"VpcId": {
+					"Ref": "gkVPC"
+				},
+				"AvailabilityZone": "",
+				"CidrBlock": "10.0.1.0/25",
+				"MapPublicIpOnLaunch": "true"
+			}
+		},
+		"PrivateSubnet": {
+			"Type": "AWS::EC2::Subnet",
+			"Properties": {
+				"VpcId": {
+					"Ref": "gkVPC"
+				},
+				"AvailabilityZone": "",
+				"CidrBlock": "10.0.1.128/25",
+				"MapPublicIpOnLaunch": "false"
+			}
+		},
+		"PublicRouteTable": {
+			"Type": "AWS::EC2::RouteTable",
+			"Properties": {
+				"VpcId": {
+					"Ref": "gkVPC"
+				}
+			}
+
+		},
+		"PublicRoute": {
+			"Type": "AWS::EC2::Route",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "PublicRouteTable"
+				},
+				"GatewayId": {
+					"Ref": "InternetGateway"
+				},
+				"DestinationCidrBlock": "0.0.0.0/0"
+			},
+
+			"DependsOn": [
+				"VPCGatewayAttachment"
+			]
+		},
+
+		"SubnetRoutableTableAssociation": {
+			"Type": "AWS::EC2::SubnetRouteTableAssociation",
+			"Properties": {
+				"RouteTableId": {
+					"Ref": "PublicRouteTable"
+				},
+				"SubnetId": {
+					"Ref": "PublicSubnet"
+				}
+			}
+
+		}
+
+	}
+}
